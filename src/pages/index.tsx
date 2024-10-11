@@ -7,7 +7,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from 'react-toastify';
 import PaymentFactoryABI from '../PaymentFactoryABI.json';
 
-const factoryAddress = "0x4d444F62cC61A1Aaf1e4bde64884628fCf8cC89B"; // deployed contract address
+const factoryAddress = "0xFfe3Ac0A460BFb8d33eC28F3feF951bD716f4265"; // deployed contract address
 
 const CreateMerchantContract: React.FC = () => {
   const { address } = useAccount();
