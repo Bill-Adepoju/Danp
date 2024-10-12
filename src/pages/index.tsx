@@ -6,12 +6,14 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from 'react-toastify';
 import PaymentFactoryABI from '../PaymentFactoryABI.json';
+import MerchantContractABI from '../MerchantContract.json'; // Ensure you import the Merchant Contract ABI
 
 const factoryAddress = "0xFfe3Ac0A460BFb8d33eC28F3feF951bD716f4265"; // deployed contract address
 
-const CreateMerchantContract: React.FC = () => {
+const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: string | null) => void }> = ({ onContractAddressChange }) => {
   const { address } = useAccount();
   const [merchantContractAddress, setMerchantContractAddress] = useState<string | null>(null);
+  const [isContractCreated, setIsContractCreated] = useState<boolean>(false); // Track if the contract has been created
 
   const { writeContract, data: hash, error, isPending } = useWriteContract();
 
@@ -24,7 +26,7 @@ const CreateMerchantContract: React.FC = () => {
     abi: PaymentFactoryABI,
     functionName: 'merchantContracts',
     args: [address],
-    enabled: false,
+    enabled: !!address,
   });
 
   const handleCreateContract = async () => {
@@ -38,7 +40,7 @@ const CreateMerchantContract: React.FC = () => {
     const btcAddress = "0x03159f1b81661a225c4110e7b4b13ac5310b0b1e";
 
     try {
-      writeContract({
+      await writeContract({
         address: factoryAddress,
         abi: PaymentFactoryABI,
         functionName: 'createMerchantContract',
@@ -50,37 +52,65 @@ const CreateMerchantContract: React.FC = () => {
     }
   };
 
-  const handleDownloadABI = () => {
-    const element = document.createElement("a");
-    const file = new Blob([JSON.stringify(PaymentFactoryABI, null, 2)], {type: 'application/json'});
-    element.href = URL.createObjectURL(file);
-    element.download = "PaymentFactoryABI.json";
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
   useEffect(() => {
     if (isSuccess) {
       toast.success("Merchant contract created successfully!");
-      refetch();  // Fetch the newly created contract address
+      setIsContractCreated(true); // Set contract created state
+      refetch();
     }
   }, [isSuccess, refetch]);
 
   useEffect(() => {
     if (fetchedAddress) {
       setMerchantContractAddress(fetchedAddress);
+      onContractAddressChange(fetchedAddress);
     }
-  }, [fetchedAddress]);
+  }, [fetchedAddress, onContractAddressChange]);
 
   useEffect(() => {
     if (error) {
       console.error("Contract creation error:", error);
       toast.error("Failed to create merchant contract.");
     }
-  }, [error]);}
+  }, [error]);
+
+  return (
+    <div className="text-center">
+      <h2 className="text-2xl font-bold mb-6">Create Your Merchant Contract</h2>
+      <button 
+        onClick={handleCreateContract} 
+        disabled={isPending || isConfirming || isContractCreated}
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow-lg transform transition duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isPending || isConfirming ? 'Creating...' : isContractCreated ? 'Contract Created' : 'Create Contract'}
+      </button>
+      {merchantContractAddress && (
+        <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-inner">
+          <h3 className="text-xl font-semibold mb-2">Your Merchant Contract Address:</h3>
+          <p className="text-blue-600 font-mono break-all">{merchantContractAddress}</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Home: NextPage = () => {
+  const [merchantContractAddress, setMerchantContractAddress] = useState<string | null>(null);
+
+  const handleDownloadABI = () => {
+    if (!merchantContractAddress) {
+      alert("Please create a merchant contract first.");
+      return;
+    }
+    const element = document.createElement("a");
+    const file = new Blob([JSON.stringify(MerchantContractABI, null, 2)], { type: 'application/json' });
+    element.href = URL.createObjectURL(file);
+    element.download = "MerchantContract.json"; // Ensure the correct filename is used
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Head>
@@ -104,12 +134,20 @@ const Home: NextPage = () => {
           <p className="text-xl text-gray-600">Create and manage your merchant contracts with ease <br /> Receive payments in cryptocurrency on your marketplace </p>
         </div>
 
-        <CreateMerchantContract />
+        <CreateMerchantContract onContractAddressChange={setMerchantContractAddress} />
       </main>
 
       <footer className="bg-gray-800 text-white py-4">
-        <div className="container mx-auto text-center">
+        <div className="container mx-auto text-center relative">
           <a href="" className="hover:underline">Made with ❤️ by Daniel</a>
+          {merchantContractAddress && (
+            <button 
+              onClick={handleDownloadABI}
+              className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full text-sm shadow-lg transform transition duration-200 hover:scale-105"
+            >
+              Download Merchant Contract
+            </button>
+          )}
         </div>
       </footer>
     </div>
