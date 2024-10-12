@@ -50,6 +50,16 @@ const CreateMerchantContract: React.FC = () => {
     }
   };
 
+  const handleDownloadABI = () => {
+    const element = document.createElement("a");
+    const file = new Blob([JSON.stringify(PaymentFactoryABI, null, 2)], {type: 'application/json'});
+    element.href = URL.createObjectURL(file);
+    element.download = "PaymentFactoryABI.json";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   useEffect(() => {
     if (isSuccess) {
       toast.success("Merchant contract created successfully!");
@@ -68,27 +78,7 @@ const CreateMerchantContract: React.FC = () => {
       console.error("Contract creation error:", error);
       toast.error("Failed to create merchant contract.");
     }
-  }, [error]);
-
-  return (
-    <div className="text-center">
-      <h2 className="text-2xl font-bold mb-6">Create Your Merchant Contract</h2>
-      <button 
-        onClick={handleCreateContract} 
-        disabled={isPending || isConfirming}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow-lg transform transition duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isPending || isConfirming ? 'Creating...' : 'Create Contract'}
-      </button>
-      {merchantContractAddress && (
-        <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-inner">
-          <h3 className="text-xl font-semibold mb-2">Your Merchant Contract Address:</h3>
-          <p className="text-blue-600 font-mono break-all">{merchantContractAddress}</p>
-        </div>
-      )}
-    </div>
-  );
-};
+  }, [error]);}
 
 const Home: NextPage = () => {
   return (
