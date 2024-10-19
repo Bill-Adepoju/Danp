@@ -25,7 +25,6 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
     abi: PaymentFactoryABI,
     functionName: 'merchantContracts',
     args: [address as `0x${string}` | undefined],
-    enabled: isConnected,
   }) as { data: string | undefined, refetch: () => void };
 
   const handleCreateContract = async () => {
