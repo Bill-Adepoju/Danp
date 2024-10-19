@@ -145,7 +145,7 @@ const Home: NextPage = () => {
               onClick={handleDownloadABI}
               className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full text-sm shadow-lg transform transition duration-200 hover:scale-105"
             >
-              Download Merchant Contract
+              Download Contract ABI
             </button>
           )}
         </div>
