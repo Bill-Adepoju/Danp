@@ -10,7 +10,7 @@ import MerchantContractABI from '../MerchantContract.json';
 const factoryAddress = "0xFfe3Ac0A460BFb8d33eC28F3feF951bD716f4265";
 
 const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: string | null) => void }> = ({ onContractAddressChange }) => {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const [merchantContractAddress, setMerchantContractAddress] = useState<string | null>(null);
   const [isContractCreated, setIsContractCreated] = useState<boolean>(false);
 
@@ -25,6 +25,7 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
     abi: PaymentFactoryABI,
     functionName: 'merchantContracts',
     args: [address as `0x${string}` | undefined],
+    enabled: isConnected,
   }) as { data: string | undefined, refetch: () => void };
 
   const handleCreateContract = async () => {
@@ -71,6 +72,22 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
     }
   }, [error]);
 
+  useEffect(() => {
+    if (!isConnected) {
+      setMerchantContractAddress(null);
+      setIsContractCreated(false);
+      onContractAddressChange(null);
+    }
+  }, [isConnected, onContractAddressChange]);
+
+  if (!isConnected) {
+    return (
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-6">Connect Your Wallet to Create a Merchant Contract</h2>
+      </div>
+    );
+  }
+
   return (
     <div className="text-center">
       <h2 className="text-2xl font-bold mb-6">Create Your Merchant Contract</h2>
@@ -93,6 +110,7 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
 
 const Home: NextPage = () => {
   const [merchantContractAddress, setMerchantContractAddress] = useState<string | null>(null);
+  const { isConnected } = useAccount();
 
   const handleDownloadABI = () => {
     if (!merchantContractAddress || merchantContractAddress === '0x0000000000000000000000000000000000000000') {
@@ -107,6 +125,12 @@ const Home: NextPage = () => {
     element.click();
     document.body.removeChild(element);
   };
+
+  useEffect(() => {
+    if (!isConnected) {
+      setMerchantContractAddress(null);
+    }
+  }, [isConnected]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -137,7 +161,7 @@ const Home: NextPage = () => {
       <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto text-center relative">
           <a href="" className="hover:underline">Made with ❤️ by Daniel</a>
-          {merchantContractAddress && merchantContractAddress !== '0x0000000000000000000000000000000000000000' && (
+          {isConnected && merchantContractAddress && merchantContractAddress !== '0x0000000000000000000000000000000000000000' && (
             <button 
               onClick={handleDownloadABI}
               className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full text-sm shadow-lg transform transition duration-200 hover:scale-105"
