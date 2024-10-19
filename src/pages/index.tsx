@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { NextPage } from 'next';
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
@@ -6,14 +5,14 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadCont
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from 'react-toastify';
 import PaymentFactoryABI from '../PaymentFactoryABI.json';
-import MerchantContractABI from '../MerchantContract.json'; // Ensure you import the Merchant Contract ABI
+import MerchantContractABI from '../MerchantContract.json';
 
-const factoryAddress = "0xFfe3Ac0A460BFb8d33eC28F3feF951bD716f4265"; // deployed contract address
+const factoryAddress = "0xFfe3Ac0A460BFb8d33eC28F3feF951bD716f4265";
 
 const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: string | null) => void }> = ({ onContractAddressChange }) => {
   const { address } = useAccount();
   const [merchantContractAddress, setMerchantContractAddress] = useState<string | null>(null);
-  const [isContractCreated, setIsContractCreated] = useState<boolean>(false); // Track if the contract has been created
+  const [isContractCreated, setIsContractCreated] = useState<boolean>(false);
 
   const { writeContract, data: hash, error, isPending } = useWriteContract();
 
@@ -25,9 +24,8 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
     address: factoryAddress,
     abi: PaymentFactoryABI,
     functionName: 'merchantContracts',
-    args: [address],
-    enabled: !!address,
-  });
+    args: [address as `0x${string}` | undefined],
+  }) as { data: string | undefined, refetch: () => void };
 
   const handleCreateContract = async () => {
     if (!address) {
@@ -35,7 +33,6 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
       return;
     }
 
-    // Hardcoded USDT and BTC token addresses
     const usdtAddress = "0xae2b32de15c685a82cb03c4d5528b6b3fe0ee0d1";
     const btcAddress = "0x03159f1b81661a225c4110e7b4b13ac5310b0b1e";
 
@@ -44,7 +41,7 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
         address: factoryAddress,
         abi: PaymentFactoryABI,
         functionName: 'createMerchantContract',
-        args: [usdtAddress, btcAddress],  // Pass the required parameters
+        args: [usdtAddress, btcAddress],
       });
     } catch (err) {
       console.error("Error creating merchant contract:", err);
@@ -55,7 +52,7 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
   useEffect(() => {
     if (isSuccess) {
       toast.success("Merchant contract created successfully!");
-      setIsContractCreated(true); // Set contract created state
+      setIsContractCreated(true);
       refetch();
     }
   }, [isSuccess, refetch]);
@@ -84,7 +81,7 @@ const CreateMerchantContract: React.FC<{ onContractAddressChange: (address: stri
       >
         {isPending || isConfirming ? 'Creating...' : isContractCreated ? 'Contract Created' : 'Create Contract'}
       </button>
-      {merchantContractAddress && (
+      {merchantContractAddress && merchantContractAddress !== '0x0000000000000000000000000000000000000000' && (
         <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-inner">
           <h3 className="text-xl font-semibold mb-2">Your Merchant Contract Address:</h3>
           <p className="text-blue-600 font-mono break-all">{merchantContractAddress}</p>
@@ -98,14 +95,14 @@ const Home: NextPage = () => {
   const [merchantContractAddress, setMerchantContractAddress] = useState<string | null>(null);
 
   const handleDownloadABI = () => {
-    if (!merchantContractAddress) {
+    if (!merchantContractAddress || merchantContractAddress === '0x0000000000000000000000000000000000000000') {
       alert("Please create a merchant contract first.");
       return;
     }
     const element = document.createElement("a");
     const file = new Blob([JSON.stringify(MerchantContractABI, null, 2)], { type: 'application/json' });
     element.href = URL.createObjectURL(file);
-    element.download = "MerchantContract.json"; // Ensure the correct filename is used
+    element.download = "MerchantContract.json";
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -131,7 +128,7 @@ const Home: NextPage = () => {
           <h1 className="text-4xl font-bold mb-4">
             Welcome to <span className="text-blue-600">Web3 Merchant</span>
           </h1>
-          <p className="text-xl text-gray-600">Create and manage your merchant contracts with ease <br /> Receive payments in cryptocurrency on your marketplace </p>
+          <p className="text-xl text-gray-600">Create and manage your merchant contracts with ease <br /> Receive payments in cryptocurrency on your marketplace</p>
         </div>
 
         <CreateMerchantContract onContractAddressChange={setMerchantContractAddress} />
@@ -140,7 +137,7 @@ const Home: NextPage = () => {
       <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto text-center relative">
           <a href="" className="hover:underline">Made with ❤️ by Daniel</a>
-          {merchantContractAddress && (
+          {merchantContractAddress && merchantContractAddress !== '0x0000000000000000000000000000000000000000' && (
             <button 
               onClick={handleDownloadABI}
               className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full text-sm shadow-lg transform transition duration-200 hover:scale-105"
